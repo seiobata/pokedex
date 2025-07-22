@@ -14,13 +14,22 @@ func startRepl() {
 		if !scanner.Scan() {
 			break
 		}
-		input := cleanInput(scanner.Text())
-		if len(input) > 0 {
-			fmt.Println("Your command was:", input[0])
+		inputs := cleanInput(scanner.Text())
+		command := inputs[0]
+
+		if cmd, ok := getCommands()[command]; ok {
+			err := cmd.callback()
+			if err != nil {
+				fmt.Println(err)
+			}
+			continue
+		} else {
+			fmt.Println("Unknown command")
+			continue
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
+	err := scanner.Err()
+	if err != nil {
 		fmt.Println("Error reading input:", err)
 	}
 }
