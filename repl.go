@@ -3,11 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 )
 
-func startRepl() {
+type config struct {
+	Client   http.Client
+	Next     *string
+	Previous *string
+}
+
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -16,11 +23,10 @@ func startRepl() {
 		}
 		inputs := cleanInput(scanner.Text())
 		command := inputs[0]
-
 		if cmd, ok := getCommands()[command]; ok {
-			err := cmd.callback()
+			err := cmd.callback(cfg)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("Error running command:", err)
 			}
 			continue
 		} else {
