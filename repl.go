@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
+
+	"github.com/seiobata/pokedex/internal/pokeapi"
 )
 
 type config struct {
-	Client   http.Client
+	Client   pokeapi.Client
 	Next     *string
 	Previous *string
 }

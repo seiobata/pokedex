@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 )
 
@@ -12,15 +9,6 @@ type cliCommand struct {
 	name        string
 	description string
 	callback    func(*config) error
-}
-
-type LocationArea struct {
-	Next     *string `json:"next"`
-	Previous *string `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
 }
 
 func getCommands() map[string]cliCommand {
@@ -67,9 +55,14 @@ func commandHelp(cfg *config) error {
 }
 
 func commandMap(cfg *config) error {
-	err := GetLocations(cfg, false)
+	locations, err := cfg.Client.GetLocations(cfg.Next)
 	if err != nil {
 		return err
+	}
+	cfg.Next = locations.Next
+	cfg.Previous = locations.Previous
+	for _, location := range locations.Results {
+		fmt.Println(location.Name)
 	}
 	return nil
 }
@@ -78,46 +71,14 @@ func commandMapb(cfg *config) error {
 	if cfg.Previous == nil {
 		return fmt.Errorf("you're on the first page")
 	}
-	err := GetLocations(cfg, true)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetLocations(cfg *config, back bool) error {
-	url := "https://pokeapi.co/api/v2/location-area"
-	if back {
-		if cfg.Previous != nil {
-			url = *cfg.Previous
-		}
-	} else {
-		if cfg.Next != nil {
-			url = *cfg.Next
-		}
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-	res, err := cfg.Client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-	locations := LocationArea{}
-	err = json.Unmarshal(data, &locations)
+	locations, err := cfg.Client.GetLocations(cfg.Previous)
 	if err != nil {
 		return err
 	}
 	cfg.Next = locations.Next
 	cfg.Previous = locations.Previous
-	for _, loc := range locations.Results {
-		fmt.Println(loc.Name)
+	for _, location := range locations.Results {
+		fmt.Println(location.Name)
 	}
 	return nil
 }

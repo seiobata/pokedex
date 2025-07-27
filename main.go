@@ -1,15 +1,13 @@
 package main
 
 import (
-	"net/http"
-	"time"
+	"github.com/seiobata/pokedex/internal/pokeapi"
 )
 
 func main() {
+	client := pokeapi.NewClient()
 	cfg := &config{
-		Client: http.Client{
-			Timeout: time.Second * 5,
-		},
+		Client: client,
 	}
 	startRepl(cfg)
 }
